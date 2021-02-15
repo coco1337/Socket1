@@ -27,6 +27,12 @@
     <ClInclude Include="Server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SessionManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FastSpinlock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Server.cpp">
@@ -36,6 +42,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ClientSession.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SessionManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FastSpinlock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

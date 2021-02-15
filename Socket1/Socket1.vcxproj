@@ -140,14 +140,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ClientSession.h" />
+    <ClInclude Include="FastSpinlock.h" />
     <ClInclude Include="IocpManager.h" />
     <ClInclude Include="Server.h" />
+    <ClInclude Include="SessionManager.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientSession.cpp" />
+    <ClCompile Include="FastSpinlock.cpp" />
     <ClCompile Include="IocpManager.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="SessionManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,15 +1,18 @@
-#include "Server.h"
 #include "stdafx.h"
-#include "IocpManager.h"
+#include "Server.h"
 #include "ClientSession.h"
+#include "IocpManager.h"
+#include "SessionManager.h"
 
 __declspec(thread) int LThreadType = -1;
 
 int _tmain(int argc, _TCHAR *argv[])
 {
 	LThreadType = THREAD_MAIN_ACCEPT;
+	GSessionManager = new SessionManager;
 	GIocpManager = new IocpManager;
 	if (false == GIocpManager->Initialize()) return -1;
+	if (false == GIocpManager->StartIoThreads()) return -1;
 	std::cout << "Start Server\n";
 	if (false == GIocpManager->StartAcceptLoop()) return -1;
 
