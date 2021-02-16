@@ -12,7 +12,8 @@ enum IOType
 	IO_SEND,
 	IO_RECV,
 	IO_RECV_ZERO,
-	IO_ACCEPT
+	IO_ACCEPT,
+	IO_DISCONNECT
 };
 
 enum DisconnectReason
@@ -26,12 +27,7 @@ enum DisconnectReason
 
 struct OverlappedIOContext
 {
-	OverlappedIOContext(const ClientSession* owner, IOType ioType) : mSessionObject(owner), mIoType(ioType)
-	{
-		memset(&mOverlapped, 0, sizeof(OVERLAPPED));
-		memset(&mWsaBuf, 0, sizeof(WSABUF));
-		memset(mBuffer, 0, BUF_SIZE);
-	}
+	OverlappedIOContext(const ClientSession* owner, IOType ioType);
 
 	OVERLAPPED mOverlapped;
 	const ClientSession* mSessionObject;

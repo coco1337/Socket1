@@ -14,9 +14,11 @@ bool IocpManager::Initialize()
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return false;
 
+	// Create Completion port
 	mCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
 	if (mCompletionPort == nullptr) return false;
 
+	// Create Listen socket
 	mListenSocket = WSASocketW(AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_OVERLAPPED);
 	if (mListenSocket == NULL) return false;
 
@@ -25,7 +27,7 @@ bool IocpManager::Initialize()
 		mListenSocket,
 		SOL_SOCKET,
 		SO_REUSEADDR,
-		reinterpret_cast<const char*>(&opt),
+		(const char*)&opt,
 		sizeof(int));
 
 	SOCKADDR_IN serveraddr;
@@ -34,7 +36,7 @@ bool IocpManager::Initialize()
 	inet_pton(AF_INET, SERVER_ADDR, &(serveraddr.sin_addr));
 	serveraddr.sin_port = htons(SERVER_PORT);
 
-	if (SOCKET_ERROR == bind(mListenSocket, reinterpret_cast<SOCKADDR*>(&serveraddr), sizeof(serveraddr))) return false;
+	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr))) return false;
 
 	return true;
 }
@@ -48,9 +50,9 @@ bool IocpManager::StartIoThreads()
 			nullptr,
 			0,
 			IoWorkerThread,
-			reinterpret_cast<LPVOID>(i + 1),
+			(LPVOID)(i + 1),
 			0,
-			reinterpret_cast<unsigned*>(&dwThreadId));
+			(unsigned*)&dwThreadId);
 
 		if (hThread == nullptr) return false;
 	}
@@ -64,6 +66,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 	LIoThreadId = reinterpret_cast<int>(lpParam);
 
 	HANDLE hCompletionPort = GIocpManager->GetCompletionPort();
+	int ret;
 
 	while (true)
 	{
@@ -71,22 +74,22 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 		OverlappedIOContext* context = nullptr;
 		ClientSession* asCompletionKey = nullptr;
 
-		int ret = GetQueuedCompletionStatus(hCompletionPort,
+		ret = GetQueuedCompletionStatus(hCompletionPort,
 			&dwTransferred,
 			(PULONG_PTR)&asCompletionKey,
 			(LPOVERLAPPED*)&context,
 			GQCS_TIMEOUT);
 
-		// check timeout first
+		// check time out
 		if (ret == 0 && GetLastError() == WAIT_TIMEOUT) continue;
-
-		if (ret == 0 && dwTransferred == 0)
+		
+		if (ret == 0 || dwTransferred == 0)
 		{
-			// connection closing
 			asCompletionKey->Disconnect(DR_RECV_ZERO);
 			GSessionManager->DeleteClientSession(asCompletionKey);
 			continue;
 		}
+		
 
 		if (nullptr == context)
 		{
@@ -137,10 +140,12 @@ bool IocpManager::StartAcceptLoop()
 
 		SOCKADDR_IN clientaddr;
 		int addrlen = sizeof(clientaddr);
-		getpeername(acceptedSock, reinterpret_cast<SOCKADDR*>(&clientaddr), &addrlen);
+		getpeername(acceptedSock, (SOCKADDR*)&clientaddr, &addrlen);
 
+		// 소켓 정보 구조체 할당, 초기화
 		ClientSession* client = GSessionManager->CreateClientSession(acceptedSock);
 
+		// 클라이언트 접속 처리
 		if (false == client->OnConnect(&clientaddr))
 		{
 			client->Disconnect(DR_ONCONNECT_ERROR);
@@ -160,7 +165,7 @@ void IocpManager::Finalize()
 bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
 {
 	delete context;
-	return client->PostRecv();
+	return true;
 }
 
 bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
