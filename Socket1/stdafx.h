@@ -15,3 +15,8 @@
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT 48000
 #define GQCS_TIMEOUT 20
+
+/*
+ * wireshark
+ * (ip.dst == 127.0.0.1) && (((tcp.dstport >= 27000 && tcp.dstport <= 30000) && (tcp.srcport == 48000)) || ((tcp.dstport == 48000) && (tcp.srcport >= 27000 && tcp.srcport <= 30000)))
+ */

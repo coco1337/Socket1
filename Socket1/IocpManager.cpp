@@ -36,6 +36,7 @@ bool IocpManager::Initialize()
 	inet_pton(AF_INET, SERVER_ADDR, &(serveraddr.sin_addr));
 	serveraddr.sin_port = htons(SERVER_PORT);
 
+	// socket bind
 	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr))) return false;
 
 	return true;
@@ -45,6 +46,7 @@ bool IocpManager::StartIoThreads()
 {
 	for (int i = 0; i < mIoThreadCount; ++i)
 	{
+		// making worker thread
 		DWORD dwThreadId;
 		HANDLE hThread = (HANDLE)_beginthreadex(
 			nullptr,
@@ -62,6 +64,7 @@ bool IocpManager::StartIoThreads()
 
 unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 {
+	// worker thread
 	LThreadType = THREAD_IO_WORKER;
 	LIoThreadId = reinterpret_cast<int>(lpParam);
 
@@ -70,6 +73,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 
 	while (true)
 	{
+		// 루프 돌면서 GQCS로 완료 통지 받을때까지 대기
 		DWORD dwTransferred = 0;
 		OverlappedIOContext* context = nullptr;
 		ClientSession* asCompletionKey = nullptr;
@@ -93,7 +97,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 
 		if (nullptr == context)
 		{
-			std::cout << "error\n";
+			std::cout << "nullptr == context\n";
 			continue;
 		}
 
@@ -128,7 +132,7 @@ bool IocpManager::StartAcceptLoop()
 	// listen
 	if (SOCKET_ERROR == listen(mListenSocket, SOMAXCONN)) return false;
 
-	// accept loop
+	// accept loop, AcceptEx로 바꾸기
 	while (true)
 	{
 		auto acceptedSock = accept(mListenSocket, nullptr, nullptr);
