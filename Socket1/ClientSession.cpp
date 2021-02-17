@@ -30,7 +30,7 @@ bool ClientSession::OnConnect(SOCKADDR_IN* addr)
 		return false;
 	}
 
-
+	// IOCompletionPort에 소켓 연결
 	HANDLE handle = CreateIoCompletionPort((HANDLE)mSocket,
 		GIocpManager->GetCompletionPort(),
 		(ULONG_PTR)this,
@@ -100,7 +100,7 @@ bool ClientSession::PostRecv() const
 
 	if (recvBytes > 0)
 	{
-		std::cout << "recvBytes::" << recvBytes << " : " << recvContext->mBuffer;
+		std::cout << "recvBytes::" << recvBytes << ", " << recvContext->mBuffer << '\n';
 	}
 
 	return true;

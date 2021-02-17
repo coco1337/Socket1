@@ -76,6 +76,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 
 	while (true)
 	{
+		// 루프 돌면서 GQCS로 완료 통지 받을때까지 대기
 		DWORD dwTransferred = 0;
 		ClientSession* asCompletionKey;
 		OverlappedIOContext* context;
