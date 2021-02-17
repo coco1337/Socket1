@@ -84,7 +84,7 @@ bool ClientSession::PostRecv() const
 	DWORD flags = 0;
 
 	if (SOCKET_ERROR == WSARecv(mSocket,
-		&recvContext->mWsaBuf,
+		&(recvContext->mWsaBuf),
 		1,
 		&recvBytes,
 		&flags,
@@ -110,14 +110,18 @@ bool ClientSession::PostSend(const char* buf, int len) const
 {
 	if (!IsConnected()) return false;
 	OverlappedIOContext* sendContext = new OverlappedIOContext(this, IO_SEND);
-	memcpy_s(sendContext->mBuffer, BUF_SIZE, buf, len);
+	sendContext->mWsaBuf.buf = (char*)buf;
+	sendContext->mWsaBuf.len = len;
+
+	DWORD sendBytes = 0;
+	DWORD flags = 0;
 
 	if (SOCKET_ERROR == WSASend(mSocket,
 		(LPWSABUF)&sendContext->mWsaBuf,
 		1,
-		(LPDWORD)BUF_SIZE,
-		0,
-		(LPOVERLAPPED)&sendContext->mOverlapped,
+		&sendBytes,
+		flags,
+		(LPWSAOVERLAPPED)sendContext,
 		nullptr))
 	{
 		std::cout << "WSASend error: " << GetLastError() << '\n';
