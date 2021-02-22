@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "ClientSession.h"
 #include "IocpManager.h"
 #include "SessionManager.h"
@@ -32,7 +32,7 @@ bool ClientSession::OnConnect(SOCKADDR_IN* addr)
 		return false;
 	}
 
-	// IOCompletionPort¿¡ ¼ÒÄÏ ¿¬°á
+	// IOCompletionPortï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	HANDLE handle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mSocket),
 		GIocpManager->GetCompletionPort(),
 		reinterpret_cast<ULONG_PTR>(this),
@@ -86,7 +86,7 @@ bool ClientSession::PostRecv() const
 	DWORD flags = 0;
 
 	if (SOCKET_ERROR == WSARecv(mSocket,
-		&recvContext->mWsaBuf,
+		&(recvContext->mWsaBuf),
 		1,
 		&recvBytes,
 		&flags,

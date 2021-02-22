@@ -1,4 +1,4 @@
-#include "IocpManager.h"
+ï»¿#include "IocpManager.h"
 #include "Server.h"
 #include "SessionManager.h"
 
@@ -72,14 +72,18 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 
 	HANDLE hCompletionPort = GIocpManager->GetCompletionPort();
 	int ret;
+	DWORD dwTransferred = 0;
+	ClientSession* asCompletionKey;
+	OverlappedIOContext* context;
 
 	while (true)
 	{
-		// ·çÇÁ µ¹¸é¼­ GQCS·Î ¿Ï·á ÅëÁö ¹ÞÀ»¶§±îÁö ´ë±â
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½é¼­ GQCSï¿½ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 		DWORD dwTransferred = 0;
-		OverlappedIOContext* context = nullptr;
-		ClientSession* asCompletionKey = nullptr;
-
+		ClientSession* asCompletionKey;
+		OverlappedIOContext* context;
+		
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½é¼­ GQCSï¿½ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 		ret = GetQueuedCompletionStatus(hCompletionPort,
 			&dwTransferred,
 			reinterpret_cast<PULONG_PTR>(&asCompletionKey),
@@ -134,7 +138,7 @@ bool IocpManager::StartAcceptLoop()
 	// listen
 	if (SOCKET_ERROR == listen(mListenSocket, SOMAXCONN)) return false;
 
-	// accept loop, AcceptEx·Î ¹Ù²Ù±â
+	// accept loop, AcceptExï¿½ï¿½ ï¿½Ù²Ù±ï¿½
 	while (true)
 	{
 		auto acceptedSock = accept(mListenSocket, nullptr, nullptr);
@@ -148,10 +152,10 @@ bool IocpManager::StartAcceptLoop()
 		int addrlen = sizeof(clientaddr);
 		getpeername(acceptedSock, reinterpret_cast<SOCKADDR*>(&clientaddr), &addrlen);
 
-		// ¼ÒÄÏ Á¤º¸ ±¸Á¶Ã¼ ÇÒ´ç, ÃÊ±âÈ­
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½Ò´ï¿½, ï¿½Ê±ï¿½È­
 		ClientSession* client = GSessionManager->CreateClientSession(acceptedSock);
 
-		// Å¬¶óÀÌ¾ðÆ® Á¢¼Ó Ã³¸®
+		// Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
 		if (false == client->OnConnect(&clientaddr))
 		{
 			client->Disconnect(DR_ONCONNECT_ERROR);
@@ -170,7 +174,7 @@ void IocpManager::Finalize()
 
 bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
 {
-	// recv ±¸Çö
+	// recv ï¿½ï¿½ï¿½ï¿½
 	client->PostSend("4", 1);
 	delete context;
 	return true;
@@ -178,7 +182,7 @@ bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOCon
 
 bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
 {
-	// send ±¸Çö
+	// send ï¿½ï¿½ï¿½ï¿½
 	delete context;
 	return true;
 }
