@@ -7,8 +7,10 @@ OverlappedIOContext::OverlappedIOContext(const ClientSession* owner, IOType ioTy
 	: mSessionObject(owner), mIoType(ioType)
 {
 	memset(&mOverlapped, 0, sizeof(OVERLAPPED));
-	memset(&mWsaBuf, 0, sizeof(WSABUF));
 	memset(mBuffer, 0, BUF_SIZE);
+	memset(&mWsaBuf, 0, sizeof(WSABUF));
+	mWsaBuf.buf = mBuffer;
+	mWsaBuf.len = BUF_SIZE;
 }
 
 bool ClientSession::OnConnect(SOCKADDR_IN* addr)
@@ -21,19 +23,19 @@ bool ClientSession::OnConnect(SOCKADDR_IN* addr)
 	// turn off nagle
 	int opt = 1;
 	setsockopt(mSocket, IPPROTO_TCP, TCP_NODELAY,
-		(const char*)&opt, sizeof(int));
+		reinterpret_cast<const char*>(&opt), sizeof(int));
 
 	opt = 0;
-	if (SOCKET_ERROR == setsockopt(mSocket, SOL_SOCKET, SO_RCVBUF, (const char*)&opt, sizeof(int)))
+	if (SOCKET_ERROR == setsockopt(mSocket, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&opt), sizeof(int)))
 	{
 		std::cout << "[DEBUG] SO_RCVBUF change error: " << GetLastError() << '\n';
 		return false;
 	}
 
 	// IOCompletionPort에 소켓 연결
-	HANDLE handle = CreateIoCompletionPort((HANDLE)mSocket,
+	HANDLE handle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mSocket),
 		GIocpManager->GetCompletionPort(),
-		(ULONG_PTR)this,
+		reinterpret_cast<ULONG_PTR>(this),
 		0);
 
 	if (handle != GIocpManager->GetCompletionPort())
@@ -63,7 +65,7 @@ void ClientSession::Disconnect(DisconnectReason dr)
 	if (SOCKET_ERROR == setsockopt(mSocket,
 		SOL_SOCKET,
 		SO_LINGER,
-		(char*)&lingerOption,
+		reinterpret_cast<char*>(&lingerOption),
 		sizeof(LINGER)))
 	{
 		std::cout << "[DEBUG] setsockopt linger option error: " << GetLastError() << '\n';
@@ -88,7 +90,7 @@ bool ClientSession::PostRecv() const
 		1,
 		&recvBytes,
 		&flags,
-		(LPWSAOVERLAPPED)recvContext,
+		reinterpret_cast<LPWSAOVERLAPPED>(recvContext),
 		nullptr))
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
@@ -111,13 +113,14 @@ bool ClientSession::PostSend(const char* buf, int len) const
 	if (!IsConnected()) return false;
 	OverlappedIOContext* sendContext = new OverlappedIOContext(this, IO_SEND);
 	memcpy_s(sendContext->mBuffer, BUF_SIZE, buf, len);
-
+	DWORD sendCount = 0;
+	
 	if (SOCKET_ERROR == WSASend(mSocket,
-		(LPWSABUF)&sendContext->mWsaBuf,
+		static_cast<LPWSABUF>(&sendContext->mWsaBuf),
 		1,
-		(LPDWORD)BUF_SIZE,
+		reinterpret_cast<LPDWORD>(&sendCount),
 		0,
-		(LPOVERLAPPED)&sendContext->mOverlapped,
+		static_cast<LPOVERLAPPED>(&sendContext->mOverlapped),
 		nullptr))
 	{
 		std::cout << "WSASend error: " << GetLastError() << '\n';

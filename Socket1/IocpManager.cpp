@@ -27,7 +27,7 @@ bool IocpManager::Initialize()
 		mListenSocket,
 		SOL_SOCKET,
 		SO_REUSEADDR,
-		(const char*)&opt,
+		reinterpret_cast<const char*>(&opt),
 		sizeof(int));
 
 	SOCKADDR_IN serveraddr;
@@ -37,7 +37,9 @@ bool IocpManager::Initialize()
 	serveraddr.sin_port = htons(SERVER_PORT);
 
 	// socket bind
-	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr))) return false;
+	if (SOCKET_ERROR == bind(mListenSocket, 
+		reinterpret_cast<SOCKADDR*>(&serveraddr), 
+		sizeof(serveraddr))) return false;
 
 	return true;
 }
@@ -48,13 +50,13 @@ bool IocpManager::StartIoThreads()
 	{
 		// making worker thread
 		DWORD dwThreadId;
-		HANDLE hThread = (HANDLE)_beginthreadex(
+		HANDLE hThread = reinterpret_cast<HANDLE>(_beginthreadex(
 			nullptr,
 			0,
 			IoWorkerThread,
-			(LPVOID)(i + 1),
+			reinterpret_cast<LPVOID>(i + 1),
 			0,
-			(unsigned*)&dwThreadId);
+			reinterpret_cast<unsigned*>(&dwThreadId)));
 
 		if (hThread == nullptr) return false;
 	}
@@ -80,8 +82,8 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 
 		ret = GetQueuedCompletionStatus(hCompletionPort,
 			&dwTransferred,
-			(PULONG_PTR)&asCompletionKey,
-			(LPOVERLAPPED*)&context,
+			reinterpret_cast<PULONG_PTR>(&asCompletionKey),
+			reinterpret_cast<LPOVERLAPPED*>(&context),
 			GQCS_TIMEOUT);
 
 		// check time out
@@ -144,7 +146,7 @@ bool IocpManager::StartAcceptLoop()
 
 		SOCKADDR_IN clientaddr;
 		int addrlen = sizeof(clientaddr);
-		getpeername(acceptedSock, (SOCKADDR*)&clientaddr, &addrlen);
+		getpeername(acceptedSock, reinterpret_cast<SOCKADDR*>(&clientaddr), &addrlen);
 
 		// 소켓 정보 구조체 할당, 초기화
 		ClientSession* client = GSessionManager->CreateClientSession(acceptedSock);
@@ -168,12 +170,15 @@ void IocpManager::Finalize()
 
 bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
 {
+	// recv 구현
+	client->PostSend("4", 1);
 	delete context;
 	return true;
 }
 
 bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
 {
+	// send 구현
 	delete context;
 	return true;
 }
