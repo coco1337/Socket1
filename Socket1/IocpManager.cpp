@@ -78,12 +78,12 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 
 	while (true)
 	{
-		// ���� ���鼭 GQCS�� �Ϸ� ���� ���������� ���
+		// GQCS
 		DWORD dwTransferred = 0;
 		ClientSession* asCompletionKey;
 		OverlappedIOContext* context;
 		
-		// ���� ���鼭 GQCS�� �Ϸ� ���� ���������� ���
+		// Waiting for GQCS
 		ret = GetQueuedCompletionStatus(hCompletionPort,
 			&dwTransferred,
 			reinterpret_cast<PULONG_PTR>(&asCompletionKey),
@@ -138,7 +138,7 @@ bool IocpManager::StartAcceptLoop()
 	// listen
 	if (SOCKET_ERROR == listen(mListenSocket, SOMAXCONN)) return false;
 
-	// accept loop, AcceptEx�� �ٲٱ�
+	// accept loop, AcceptEx
 	while (true)
 	{
 		auto acceptedSock = accept(mListenSocket, nullptr, nullptr);
@@ -152,10 +152,10 @@ bool IocpManager::StartAcceptLoop()
 		int addrlen = sizeof(clientaddr);
 		getpeername(acceptedSock, reinterpret_cast<SOCKADDR*>(&clientaddr), &addrlen);
 
-		// ���� ���� ����ü �Ҵ�, �ʱ�ȭ
+		// Create Client Session
 		ClientSession* client = GSessionManager->CreateClientSession(acceptedSock);
 
-		// Ŭ���̾�Ʈ ���� ó��
+		// Connect func
 		if (false == client->OnConnect(&clientaddr))
 		{
 			client->Disconnect(DR_ONCONNECT_ERROR);
@@ -174,15 +174,15 @@ void IocpManager::Finalize()
 
 bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
 {
-	// recv ����
-	client->PostSend("4", 1);
+	// recv
+	client->PostSend("test", 5);
 	delete context;
 	return true;
 }
 
 bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred)
 {
-	// send ����
+	// send
 	delete context;
 	return true;
 }

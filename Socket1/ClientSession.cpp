@@ -32,7 +32,7 @@ bool ClientSession::OnConnect(SOCKADDR_IN* addr)
 		return false;
 	}
 
-	// IOCompletionPort�� ���� ����
+	// IOCompletionPort
 	HANDLE handle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mSocket),
 		GIocpManager->GetCompletionPort(),
 		reinterpret_cast<ULONG_PTR>(this),
@@ -112,14 +112,18 @@ bool ClientSession::PostSend(const char* buf, int len) const
 {
 	if (!IsConnected()) return false;
 	OverlappedIOContext* sendContext = new OverlappedIOContext(this, IO_SEND);
+	
 	memcpy_s(sendContext->mBuffer, BUF_SIZE, buf, len);
+	memcpy_s(sendContext->mWsaBuf.buf, BUF_SIZE, buf, len);
+	
 	DWORD sendCount = 0;
+	DWORD flags = 0;
 	
 	if (SOCKET_ERROR == WSASend(mSocket,
 		static_cast<LPWSABUF>(&sendContext->mWsaBuf),
 		1,
 		reinterpret_cast<LPDWORD>(&sendCount),
-		0,
+		flags,
 		static_cast<LPOVERLAPPED>(&sendContext->mOverlapped),
 		nullptr))
 	{
