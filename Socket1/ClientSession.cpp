@@ -49,8 +49,8 @@ bool ClientSession::PostAccept()
 	acceptContext->mWsaBuf.buf = nullptr;
 	
 	// AcceptEx로 구현
-	if (FALSE == AcceptEx(*GIocpManager->GetListenSocket(), mSocket, 
-		&GIocpManager->mAcceptBuf, 0, sizeof(SOCKADDR_IN)+16, 
+	if (FALSE == AcceptEx(*GIocpManager->GetListenSocket(), mSocket,
+		GIocpManager->mAcceptBuf, 0, sizeof(SOCKADDR_IN)+16, 
 		sizeof(SOCKADDR_IN)+16, &bytes, 
 		reinterpret_cast<LPOVERLAPPED>(acceptContext)))
 	{
@@ -241,7 +241,7 @@ void ClientSession::SendCompletion(DWORD transferred)
 
 void ClientSession::AddRef()
 {
-	
+	InterlockedIncrement(&mRefCount);
 }
 
 void ClientSession::ReleaseRef()

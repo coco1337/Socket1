@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="ClientSession.h" />
+    <ClInclude Include="Exception.h" />
     <ClInclude Include="FastSpinlock.h" />
     <ClInclude Include="IocpManager.h" />
     <ClInclude Include="Server.h" />
@@ -150,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="CircularBuffer.cpp" />
     <ClCompile Include="ClientSession.cpp" />
+    <ClCompile Include="Exception.cpp" />
     <ClCompile Include="FastSpinlock.cpp" />
     <ClCompile Include="IocpManager.cpp" />
     <ClCompile Include="Server.cpp" />

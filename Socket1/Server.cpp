@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Exception.h"
 #include "Server.h"
 #include "ClientSession.h"
 #include "IocpManager.h"

@@ -44,7 +44,7 @@ bool IocpManager::Initialize()
 	if (mCompletionPort == nullptr) return false;
 
 	// Create TCP socket
-	mListenSocket = WSASocket(AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_OVERLAPPED);
+	mListenSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 	if (mListenSocket == NULL) return false;
 
 	HANDLE handle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListenSocket), mCompletionPort, 0, 0);
