@@ -8,19 +8,24 @@
 __declspec(thread) int LIoThreadId = 0;
 IocpManager* GIocpManager = nullptr;
 
-//TODO : AcceptEx DisconnectEx 함수 사용할 수 있도록 구현
+LPFN_ACCEPTEX IocpManager::mFnAcceptEx = nullptr;
+LPFN_DISCONNECTEX IocpManager::mFnDisconnectEx = nullptr;
+char IocpManager::mAcceptBuf[64] = { 0, };
 
 BOOL DisconnectEx(SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved)
 {
 	// TODO : return ...
-	return 0;
+	return IocpManager::mFnDisconnectEx(hSocket, lpOverlapped, dwFlags, reserved);
 }
 
+/*
 BOOL AcceptEx(SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
 	DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped)
 {
-	return 0;
+	return IocpManager::mFnAcceptEx(sListenSocket, sAcceptSocket, lpOutputBuffer, dwReceiveDataLength,
+		dwLocalAddressLength, dwRemoteAddressLength, lpdwBytesReceived, lpOverlapped);
 }
+*/
 
 IocpManager::IocpManager() : mCompletionPort(nullptr), mIoThreadCount(2), mListenSocket(NULL) {}
 IocpManager::~IocpManager() {}
@@ -68,14 +73,17 @@ bool IocpManager::Initialize()
 		reinterpret_cast<SOCKADDR*>(&serveraddr), 
 		sizeof(serveraddr))) return false;
 
-
-	//TODO : WSAIoclt을 이용해 AcceptEx, DisconnectEx 함수 사용가능하도록
-
 	GUID guidDisconnectEx = WSAID_DISCONNECTEX;
 	DWORD bytes = 0;
 	if (SOCKET_ERROR == WSAIoctl(mListenSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
-		&guidDisconnectEx, sizeof(GUID), &m))
+		&guidDisconnectEx, sizeof(GUID), &mFnDisconnectEx, 
+		sizeof(LPFN_DISCONNECTEX), &bytes, nullptr, nullptr)) return false;
 
+	GUID guidAcceptEx = WSAID_ACCEPTEX;
+	if (SOCKET_ERROR == WSAIoctl(mListenSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+		&guidAcceptEx, sizeof(GUID), &mFnAcceptEx, 
+		sizeof(LPFN_ACCEPTEX), &bytes, nullptr, nullptr)) return false;
+	
 	// make session pool
 	GSessionManager->PrepareSessions();
 	return true;

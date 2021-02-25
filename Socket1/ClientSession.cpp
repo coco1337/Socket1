@@ -43,8 +43,24 @@ void ClientSession::SessionReset()
 bool ClientSession::PostAccept()
 {
 	OverlappedAcceptContext* acceptContext = new OverlappedAcceptContext(this);
-	// AcceptEx로 구현
+	DWORD bytes = 0;
+	DWORD flags = 0;
+	acceptContext->mWsaBuf.len = 0;
+	acceptContext->mWsaBuf.buf = nullptr;
 	
+	// AcceptEx로 구현
+	if (FALSE == AcceptEx(*GIocpManager->GetListenSocket(), mSocket, 
+		&GIocpManager->mAcceptBuf, 0, sizeof(SOCKADDR_IN)+16, 
+		sizeof(SOCKADDR_IN)+16, &bytes, 
+		reinterpret_cast<LPOVERLAPPED>(acceptContext)))
+	{
+		if (WSAGetLastError() != WSA_IO_PENDING)
+		{
+			DeleteIoContext(acceptContext);
+			std::cout << "AcceptEx Error : " << GetLastError() << '\n';
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -94,8 +110,14 @@ void ClientSession::AcceptCompletion()
 			break;
 		}
 
-		//TODO: CreateIoCompletionPort를 이용한 소켓 연결
-		//HANDLE handle = CreateIoCompletionPort(...);
+		HANDLE handle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mSocket), GIocpManager->GetCompletionPort(),
+			reinterpret_cast<ULONG_PTR>(this), 0);
+		if (handle != GIocpManager->GetCompletionPort())
+		{
+			std::cout << "[DEBUG] CreateIoCompletionPort Error : " << GetLastError() << '\n';
+			resultOk = false;
+			break;
+		}
 
 	} while (false);
 
@@ -235,7 +257,3 @@ void DeleteIoContext(OverlappedIOContext* context)
 	context->mSessionObject->ReleaseRef();
 	delete context;
 }
-
-
-
-
