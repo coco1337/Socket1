@@ -3,7 +3,8 @@
 class CircularBuffer
 {
 public:
-	CircularBuffer(size_t capacity) : mARegionSize(0), mBRegionPointer(nullptr), mBRegionSize(0), mCapacity(capacity)
+
+	CircularBuffer(size_t capacity) : mBRegionPointer(nullptr), mARegionSize(0), mBRegionSize(0), mCapacity(capacity)
 	{
 		mBuffer = new char[mCapacity];
 		mBufferEnd = mBuffer + mCapacity;
@@ -22,23 +23,28 @@ public:
 		mBRegionSize = 0;
 
 		memset(mBuffer, 0, mCapacity);
+
 		mBufferEnd = mBuffer + mCapacity;
 		mARegionPointer = mBuffer;
 	}
 
+	/// 버퍼의 첫부분 len만큼 날리기
 	void Remove(size_t len);
 
 	size_t GetFreeSpaceSize()
 	{
-		if (mBRegionPointer != nullptr) return GetBFreeSpace();
-		else {
-			// A 버퍼보다 많이 존재하면 B 버퍼로 스위치
-			if (GetAFreeSpace() < GetSpaceBeforeA()) {
+		if (mBRegionPointer != nullptr)
+			return GetBFreeSpace();
+		else
+		{
+			/// A 버퍼보다 더 많이 존재하면, B 버퍼로 스위치
+			if (GetAFreeSpace() < GetSpaceBeforeA())
+			{
 				AllocateB();
 				return GetBFreeSpace();
-			} else {
-				return GetAFreeSpace();
 			}
+			else
+				return GetAFreeSpace();
 		}
 	}
 
@@ -49,31 +55,45 @@ public:
 
 	size_t GetContinuousBytes() const
 	{
-		if (mARegionSize > 0) return mARegionSize;
-		else return mBRegionSize;
+		if (mARegionSize > 0)
+			return mARegionSize;
+		else
+			return mBRegionSize;
 	}
 
-	//쓰기가 가능한 위치 반환
+	/// 쓰기가 가능한 위치 (버퍼의 끝부분) 반환
 	char* GetBuffer() const
 	{
-		if (mBRegionPointer != nullptr) return mBRegionPointer + mBRegionSize;
-		else return mARegionPointer + mARegionSize;
+		if (mBRegionPointer != nullptr)
+			return mBRegionPointer + mBRegionSize;
+		else
+			return mARegionPointer + mARegionSize;
 	}
 
+
+
+
+	/// 커밋(aka. IncrementWritten)
 	void Commit(size_t len)
 	{
-		if (mBRegionPointer != nullptr) mBRegionSize += len;
-		else mARegionSize += len;
+		if (mBRegionPointer != nullptr)
+			mBRegionSize += len;
+		else
+			mARegionSize += len;
 	}
 
-	// 버퍼 첫부분 리턴
+	/// 버퍼의 첫부분 리턴
 	char* GetBufferStart() const
 	{
-		if (mARegionSize > 0) return mARegionPointer;
-		else return mBRegionPointer;
+		if (mARegionSize > 0)
+			return mARegionPointer;
+		else
+			return mBRegionPointer;
 	}
 
+
 private:
+
 	void AllocateB()
 	{
 		mBRegionPointer = mBuffer;
@@ -88,20 +108,26 @@ private:
 	{
 		return (mARegionPointer - mBuffer);
 	}
+
+
 	size_t GetBFreeSpace() const
 	{
-		if (mBRegionPointer == nullptr) return 0;
+		if (mBRegionPointer == nullptr)
+			return 0;
+
 		return (mARegionPointer - mBRegionPointer - mBRegionSize);
 	}
+
 private:
+
 	char* mBuffer;
 	char* mBufferEnd;
 
 	char* mARegionPointer;
-	size_t mARegionSize;
+	size_t	mARegionSize;
 
 	char* mBRegionPointer;
-	size_t mBRegionSize;
+	size_t	mBRegionSize;
 
-	size_t mCapacity;
+	size_t	mCapacity;
 };

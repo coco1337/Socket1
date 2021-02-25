@@ -10,13 +10,14 @@
 #include <tchar.h>
 #include <timeapi.h>
 #include <Windows.h>
+#include <MSWSock.h>
 
-#define BUF_SIZE 4096
+#define BUF_SIZE 65536
 #define SERVER_ADDR "127.0.0.1"
-#define SERVER_PORT 48000
+#define SERVER_PORT 9001
 #define GQCS_TIMEOUT 20
 
 /*
  * wireshark
- * (ip.dst == 127.0.0.1) && (((tcp.dstport >= 27000 && tcp.dstport <= 30000) && (tcp.srcport == 48000)) || ((tcp.dstport == 48000) && (tcp.srcport >= 27000 && tcp.srcport <= 30000)))
+ * (ip.dst == 127.0.0.1) && ((tcp.srcport == 48000) || (tcp.dstport == 48000))
  */

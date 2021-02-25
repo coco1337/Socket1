@@ -1,10 +1,11 @@
 #pragma once
+#include "CircularBuffer.h"
 #include "FastSpinlock.h"
 
 // 세션, 각종 이벤트들 -> OnConnect, Disconnect, PostSend, PostRecv 등등
 
 class ClientSession;
-class IocpManager;
+class SessionManager;
 
 enum IOType
 {
@@ -19,43 +20,93 @@ enum IOType
 enum DisconnectReason
 {
 	DR_NONE,
-	DR_RECV_ZERO,
 	DR_ACTIVE,
 	DR_ONCONNECT_ERROR,
+	DR_IO_REQUEST_ERROR,
 	DR_COMPLETION_ERROR,
 };
 
 struct OverlappedIOContext
 {
-	OverlappedIOContext(const ClientSession* owner, IOType ioType);
+	OverlappedIOContext(ClientSession* owner, IOType ioType);
 
 	OVERLAPPED mOverlapped;
-	const ClientSession* mSessionObject;
+	ClientSession* mSessionObject;
 	IOType mIoType;
 	WSABUF mWsaBuf;
-	char mBuffer[BUF_SIZE];
 };
+
+struct OverlappedSendContext : public OverlappedIOContext
+{
+	OverlappedSendContext(ClientSession* owner) : OverlappedIOContext(owner, IO_SEND) {}
+};
+
+struct OverlappedRecvContext : public OverlappedIOContext
+{
+	OverlappedRecvContext(ClientSession* owner) : OverlappedIOContext(owner, IO_RECV) {}
+};
+
+struct OverlappedPreRecvContext : public OverlappedIOContext
+{
+	OverlappedPreRecvContext(ClientSession* owner) : OverlappedIOContext(owner, IO_RECV_ZERO)
+	{
+	}
+};
+
+struct OverlappedDisconnectContext : public OverlappedIOContext
+{
+	OverlappedDisconnectContext(ClientSession* owner, DisconnectReason dr)
+		: OverlappedIOContext(owner, IO_DISCONNECT), mDisconnectReason(dr) {}
+
+	DisconnectReason mDisconnectReason;
+};
+
+struct OverlappedAcceptContext : public OverlappedIOContext
+{
+	OverlappedAcceptContext(ClientSession* owner) :OverlappedIOContext(owner, IO_ACCEPT) {}
+};
+
+void DeleteIoContext(OverlappedIOContext* context);
 
 class ClientSession
 {
 public:
-	ClientSession(SOCKET sock) : mConnected(false), mSocket(sock)
-	{
-		memset(&mClientAddr, 0, sizeof(SOCKADDR_IN));
-	}
-
+	ClientSession();
 	~ClientSession() {}
 
-	bool OnConnect(SOCKADDR_IN* addr);
-	bool IsConnected() const { return mConnected; }
-	bool PostRecv() const;
-	bool PostSend(const char* buf, int len) const;
-	void Disconnect(DisconnectReason dr);
+	void SessionReset();
+	bool IsConnected() const { return !!mConnected; }
 
-	bool mConnected;
+	bool PostAccept();
+	void AcceptCompletion();
+
+	bool PreRecv(); // zero byte recv
+
+	bool PostRecv();
+	void RecvCompletion(DWORD transferred);
+
+	bool PostSend();
+	void SendCompletion(DWORD transferred);
+
+	void DisconnectRequest(DisconnectReason dr);
+	void DisconnectCompletion(DisconnectReason dr);
+
+	void AddRef();
+	void ReleaseRef();
+
+	void SetSocket(SOCKET sock) { mSocket = sock; }
+	SOCKET GetSocket() const { return mSocket; }
+	
+private:
 	SOCKET mSocket;
 	SOCKADDR_IN mClientAddr;
+	
+	FastSpinlock mBufferLock;
 
-private:
-	FastSpinlock mLock;
+	CircularBuffer mBuffer;
+
+	volatile long mRefCount;
+	volatile long mConnected;
+
+	friend class SessionManager;
 };

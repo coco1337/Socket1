@@ -10,7 +10,7 @@ void FastSpinlock::EnterLock()
 
 		UINT uTimerRes = 1;
 		timeBeginPeriod(uTimerRes);
-		Sleep((DWORD)min(10, nloops));
+		Sleep(static_cast<DWORD>(min(10, nloops)));
 		timeEndPeriod(uTimerRes);
 	}
 
