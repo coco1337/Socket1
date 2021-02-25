@@ -1,29 +1,37 @@
 #pragma once
-#include "stdafx.h"
-#include "ClientSession.h"
+
+class ClientSession;
+
+struct OverlappedSendContext;
+struct OverlappedPreRecvContext;
+struct OverlappedRecvContext;
+struct OverlappedDisconnectContext;
+struct OverlappedAcceptContext;
 
 // iocp 연결과 관련된 함수들
 
 class IocpManager
 {
 public:
-	IocpManager() = default;
-	~IocpManager() = default;
+	IocpManager();
+	~IocpManager();
 	
 	bool Initialize();
 	void Finalize();
 
 	bool StartIoThreads();
-	bool StartAcceptLoop();
+	bool StartAccept();
 
 	HANDLE GetCompletionPort() { return mCompletionPort; }
 	int GetIoThreadCount() { return mIoThreadCount; }
 
+	SOCKET* GetListenSocket() { return &mListenSocket; }
 private:
 	static unsigned int WINAPI IoWorkerThread(LPVOID lpParam);
 
-	static bool SendCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred);
-	static bool ReceiveCompletion(const ClientSession* client, OverlappedIOContext* context, DWORD dwTransferred);
+	static bool PreReceiveCompletion(ClientSession* client, OverlappedPreRecvContext* context, DWORD dwTransferred);
+	static bool ReceiveCompletion(ClientSession* client, OverlappedRecvContext* context, DWORD dwTransferred);
+	static bool SendCompletion(ClientSession* client, OverlappedSendContext* context, DWORD dwTransferred);
 	
 	
 	int mIoThreadCount;

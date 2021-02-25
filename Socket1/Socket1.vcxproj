@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="ClientSession.h" />
     <ClInclude Include="FastSpinlock.h" />
     <ClInclude Include="IocpManager.h" />
@@ -147,6 +148,7 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CircularBuffer.cpp" />
     <ClCompile Include="ClientSession.cpp" />
     <ClCompile Include="FastSpinlock.cpp" />
     <ClCompile Include="IocpManager.cpp" />
