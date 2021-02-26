@@ -1,5 +1,5 @@
 #pragma once
-#define MAX_CONNECTION 10000
+#define MAX_CONNECTION 1
 
 enum THREAD_TYPE
 {

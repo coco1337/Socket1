@@ -4,6 +4,8 @@
 #include "FastSpinlock.h"
 #include "SessionManager.h"
 
+#include "Exception.h"
+
 SessionManager* GSessionManager = nullptr;
 
 SessionManager::~SessionManager()
@@ -13,6 +15,8 @@ SessionManager::~SessionManager()
 
 void SessionManager::PrepareSessions()
 {
+	CRASH_ASSERT(LThreadType == THREAD_MAIN);
+	
 	for (int i = 0; i < MAX_CONNECTION; ++i)
 	{
 		ClientSession* client = new ClientSession();
@@ -23,7 +27,7 @@ void SessionManager::PrepareSessions()
 void SessionManager::ReturnClientSession(ClientSession* client)
 {
 	FastSpinlockGuard guard(mLock);
-
+	CRASH_ASSERT(client->mConnected == 0 && client->mRefCount == 0);
 	client->SessionReset();
 	mFreeSessionList.push_back(client);
 	++mCurrentReturnCount;
@@ -39,7 +43,7 @@ bool SessionManager::AcceptSessions()
 		mFreeSessionList.pop_back();
 		++mCurrentIssueCount;
 
-		newClient->AddRef();
+		newClient->AddRef(); // ref count + 1
 
 		if (false == newClient->PostAccept()) return false;
 	}

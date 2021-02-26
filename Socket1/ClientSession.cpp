@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "Server.h"
 #include "ClientSession.h"
+
+#include "Exception.h"
 #include "IocpManager.h"
 #include "SessionManager.h"
 
@@ -12,7 +14,7 @@ OverlappedIOContext::OverlappedIOContext(ClientSession* owner, IOType ioType)
 	mSessionObject->AddRef();
 }
 
-ClientSession::ClientSession() : mBuffer(BUF_SIZE), mConnected(0), mRefCount(0)
+ClientSession::ClientSession() : mBuffer(BUF_SIZE), mRefCount(0), mConnected(0)
 {
 	memset(&mClientAddr, 0, sizeof(SOCKADDR_IN));
 	mSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
@@ -42,6 +44,7 @@ void ClientSession::SessionReset()
 
 bool ClientSession::PostAccept()
 {
+	CRASH_ASSERT(LThreadType == THREAD_MAIN);
 	OverlappedAcceptContext* acceptContext = new OverlappedAcceptContext(this);
 	DWORD bytes = 0;
 	DWORD flags = 0;
@@ -70,6 +73,7 @@ void ClientSession::AcceptCompletion()
 	if (1 == InterlockedExchange(&mConnected, 1))
 	{
 		// already exists?
+		CRASH_ASSERT(false);
 		return;
 	}
 
@@ -161,7 +165,21 @@ bool ClientSession::PreRecv()
 
 	OverlappedPreRecvContext* recvContext = new OverlappedPreRecvContext(this);
 
-	// zero-byte recv 구현
+	DWORD recvbytes = 0;
+	DWORD flags = 0;
+	recvContext->mWsaBuf.len = 0;
+	recvContext->mWsaBuf.buf = nullptr;
+
+	if (SOCKET_ERROR == WSARecv(mSocket, &recvContext->mWsaBuf, 1, &recvbytes, &flags, 
+		reinterpret_cast<LPOVERLAPPED>(recvContext), nullptr))
+	{
+		if (WSAGetLastError() != WSA_IO_PENDING)
+		{
+			DeleteIoContext(recvContext);
+			std::cout << "ClientSession::PreRecv Error : " << GetLastError() << '\n';
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -241,7 +259,7 @@ void ClientSession::SendCompletion(DWORD transferred)
 
 void ClientSession::AddRef()
 {
-	InterlockedIncrement(&mRefCount);
+	CRASH_ASSERT(InterlockedIncrement(&mRefCount) > 0);
 }
 
 void ClientSession::ReleaseRef()

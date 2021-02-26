@@ -62,6 +62,14 @@ bool IocpManager::Initialize()
 		reinterpret_cast<const char*>(&opt),
 		sizeof(int));
 
+	opt = 1;
+	setsockopt(
+		mListenSocket,
+		SOL_SOCKET,
+		SO_CONDITIONAL_ACCEPT,
+		reinterpret_cast<char*>(&opt),
+		sizeof(int));
+
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
@@ -158,7 +166,6 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 		if (ret == 0 || dwTransferred == 0)
 		{
 			int gle = GetLastError();
-			//TODO : check time out first... GQCS 타임아웃의 경우 어떻게?
 			if (gle == WAIT_TIMEOUT) continue;
 			if (context->mIoType == IO_RECV || context->mIoType==IO_SEND)
 			{
@@ -172,7 +179,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 		switch(context->mIoType)
 		{
 		case IO_DISCONNECT:
-			theClient->DisconnectCompletion(static_cast<OverlappedDisconnectContext*>(context)->mDisconnectReason);
+			theClient->DisconnectCompletion(reinterpret_cast<OverlappedDisconnectContext*>(context)->mDisconnectReason);
 			completionOk = true;
 			break;
 		case IO_ACCEPT:
@@ -180,13 +187,13 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 			completionOk = true;
 			break;
 		case IO_RECV_ZERO:
-			completionOk = PreReceiveCompletion(theClient, static_cast<OverlappedPreRecvContext*>(context), dwTransferred);
+			completionOk = PreReceiveCompletion(theClient, reinterpret_cast<OverlappedPreRecvContext*>(context), dwTransferred);
 			break;
 		case IO_SEND:
-			completionOk = SendCompletion(theClient, static_cast<OverlappedSendContext*>(context), dwTransferred);
+			completionOk = SendCompletion(theClient, reinterpret_cast<OverlappedSendContext*>(context), dwTransferred);
 			break;
 		case IO_RECV:
-			completionOk = ReceiveCompletion(theClient, static_cast<OverlappedRecvContext*>(context), dwTransferred);
+			completionOk = ReceiveCompletion(theClient, reinterpret_cast<OverlappedRecvContext*>(context), dwTransferred);
 			break;
 		default:
 			std::cout << "Unknown I/O Type : " << context->mIoType << '\n';
