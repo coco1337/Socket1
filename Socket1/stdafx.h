@@ -17,7 +17,8 @@
 #define BUF_SIZE 65536
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT 9001
-#define GQCS_TIMEOUT 20
+#define GQCS_TIMEOUT INFINITE // 20
+#define MAX_CONNECTION 1
 
 /*
  * wireshark

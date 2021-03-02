@@ -14,7 +14,6 @@ char IocpManager::mAcceptBuf[64] = { 0, };
 
 BOOL DisconnectEx(SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved)
 {
-	// TODO : return ...
 	return IocpManager::mFnDisconnectEx(hSocket, lpOverlapped, dwFlags, reserved);
 }
 
@@ -61,15 +60,17 @@ bool IocpManager::Initialize()
 		SO_REUSEADDR,
 		reinterpret_cast<const char*>(&opt),
 		sizeof(int));
-
-	opt = 1;
+	
+	
+	/*opt = 1;
 	setsockopt(
 		mListenSocket,
 		SOL_SOCKET,
 		SO_CONDITIONAL_ACCEPT,
 		reinterpret_cast<char*>(&opt),
-		sizeof(int));
-
+		sizeof(int));*/
+	
+	
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
@@ -128,7 +129,7 @@ bool IocpManager::StartAccept()
 
 	while (GSessionManager->AcceptSessions())
 	{
-		Sleep(100);
+		Sleep(GQCS_TIMEOUT);
 	}
 }
 
@@ -215,7 +216,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 bool IocpManager::PreReceiveCompletion(ClientSession* client, OverlappedPreRecvContext* context, DWORD dwTransferred)
 {
 	// real receive...
-	return client->PreRecv();
+	return client->PostRecv();
 }
 
 bool IocpManager::ReceiveCompletion(ClientSession* client, OverlappedRecvContext* context, DWORD dwTransferred)

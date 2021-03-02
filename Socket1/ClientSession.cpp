@@ -147,7 +147,14 @@ void ClientSession::DisconnectRequest(DisconnectReason dr)
 
 	OverlappedDisconnectContext* context = new OverlappedDisconnectContext(this, dr);
 
-	// TODO : DisconnectEx를 이용한 연결 끊기 요청
+	if (FALSE == DisconnectEx(mSocket, reinterpret_cast<LPWSAOVERLAPPED>(context), TF_REUSE_SOCKET, 0))
+	{
+		if (WSAGetLastError() != WSA_IO_PENDING)
+		{
+			DeleteIoContext(context);
+			std::cout << "ClientSession::DisconnectRequest Error : " << GetLastError() << '\n';
+		}
+	}
 }
 
 
@@ -167,6 +174,7 @@ bool ClientSession::PreRecv()
 
 	DWORD recvbytes = 0;
 	DWORD flags = 0;
+	// 0 byte recv를 위해 버퍼를 nullptr로
 	recvContext->mWsaBuf.len = 0;
 	recvContext->mWsaBuf.buf = nullptr;
 
@@ -273,5 +281,29 @@ void DeleteIoContext(OverlappedIOContext* context)
 {
 	if (nullptr == context) return;
 	context->mSessionObject->ReleaseRef();
-	delete context;
+	switch (context->mIoType)
+	{
+	case IO_SEND:
+		delete static_cast<OverlappedSendContext*>(context);
+		break;
+
+	case IO_RECV_ZERO:
+		delete static_cast<OverlappedPreRecvContext*>(context);
+		break;
+
+	case IO_RECV:
+		delete static_cast<OverlappedRecvContext*>(context);
+		break;
+
+	case IO_DISCONNECT:
+		delete static_cast<OverlappedDisconnectContext*>(context);
+		break;
+
+	case IO_ACCEPT:
+		delete static_cast<OverlappedAcceptContext*>(context);
+		break;
+
+	default:
+		CRASH_ASSERT(false);
+	}
 }

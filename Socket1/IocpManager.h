@@ -46,3 +46,5 @@ private:
 
 extern __declspec(thread) int LIoThreadId;
 extern IocpManager* GIocpManager;
+
+BOOL DisconnectEx(SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved);
