@@ -53,7 +53,7 @@ public:
 		return mARegionSize + mBRegionSize;
 	}
 
-	size_t GetContinuousBytes() const
+	size_t GetContiguousBytes() const
 	{
 		if (mARegionSize > 0)
 			return mARegionSize;

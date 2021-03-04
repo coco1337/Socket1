@@ -33,10 +33,12 @@ void ClientSession::SessionReset()
 	lingerOption.l_linger = 0;
 
 	// no TCP TIME_WAIT
-	if (SOCKET_ERROR == setsockopt(mSocket, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&lingerOption), sizeof(LINGER)))
+	if (SOCKET_ERROR == setsockopt(mSocket, SOL_SOCKET, SO_LINGER, 
+		reinterpret_cast<char*>(&lingerOption), sizeof(LINGER)))
 	{
 		std::cout << "[DEBUG] setsockopt linger option error: " << GetLastError() << '\n';
 	}
+	
 	closesocket(mSocket);
 
 	mSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
@@ -178,6 +180,7 @@ bool ClientSession::PreRecv()
 	recvContext->mWsaBuf.len = 0;
 	recvContext->mWsaBuf.buf = nullptr;
 
+	// 최초 접속시 WSARecv 호출해줘서 Recv를 기다림
 	if (SOCKET_ERROR == WSARecv(mSocket, &recvContext->mWsaBuf, 1, &recvbytes, &flags, 
 		reinterpret_cast<LPOVERLAPPED>(recvContext), nullptr))
 	{
@@ -234,13 +237,13 @@ bool ClientSession::PostSend()
 
 	FastSpinlockGuard cs(mBufferLock);
 
-	if (0 == mBuffer.GetContinuousBytes()) return true;
+	if (0 == mBuffer.GetContiguousBytes()) return true;
 
 	OverlappedSendContext* sendContext = new OverlappedSendContext(this);
 
 	DWORD sendbytes = 0;
 	DWORD flags = 0;
-	sendContext->mWsaBuf.len = static_cast<ULONG>(mBuffer.GetContinuousBytes());
+	sendContext->mWsaBuf.len = static_cast<ULONG>(mBuffer.GetContiguousBytes());
 	sendContext->mWsaBuf.buf = mBuffer.GetBufferStart();
 
 	// start async send
