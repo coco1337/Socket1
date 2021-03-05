@@ -66,11 +66,11 @@ struct PooledAllocatable {};
 template <class T, class... Args>
 T* xnew(Args... arg)
 {
-	static_assert(true == std::isConvertible<T, PooledAllocatable>::value, "only allowed when PooledAllocatable");
+	static_assert(true == std::is_convertible<T, PooledAllocatable>::value, "only allowed when PooledAllocatable");
 	// 메모리 할당
 	void* alloc = GMemoryPool->Allocate(sizeof(T));
 	new (alloc)T(arg...);
-	return reinterpret_cast<T*>(alloc);	
+	return static_cast<T*>(alloc);	
 }
 
 template<class T>

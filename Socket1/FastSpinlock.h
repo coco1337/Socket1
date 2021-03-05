@@ -1,5 +1,16 @@
 #pragma once
 
+enum LockOrder
+{
+	LO_DONT_CARE = 0,
+	LO_FIRST_CLASS,
+	LO_BUSINESS_CLASS,
+	LO_ECONOMY_CLASS,
+	LO_LUGGAGE_CLASS
+};
+
+class LockOrderChecker;
+
 class FastSpinlock
 {
 public:
