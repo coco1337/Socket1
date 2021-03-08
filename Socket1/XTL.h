@@ -5,8 +5,8 @@
 #include <vector>
 #include <deque>
 #include <set>
-#include <hash_set>
-#include <hash_map>
+#include <unordered_map>
+#include <unordered_set>
 #include <map>
 #include <queue>
 
@@ -46,13 +46,12 @@ public:
 	T* allocate(size_t n)
 	{
 		// TODO : 메모리풀에서 할당해서 리턴
-		return static_cast<T*>(malloc(n * sizeof(T)));
+		return static_cast<T*>(GMemoryPool->Allocate(static_cast<int>(n)*sizeof(T)));
 	}
 
 	void deallocate(T* ptr, size_t n)
 	{
-		// TODO : 메모리풀에서 반납
-		free(ptr);
+		GMemoryPool->Deallocate(ptr, -1599);
 	}
 };
 
@@ -94,18 +93,18 @@ struct xset
 };
 
 template <class K, class T, class C = std::hash_compare<K, std::less<K>>>
-struct xhash_map
+struct xunordered_map
 {
-	typedef std::hash_map<K, T, C, STLAllocator<std::pair<K, T>>> type;
+	typedef std::unordered_map<K, T, C, STLAllocator<std::pair<K, T>>> type;
 };
 
 template <class T, class C = std::hash_compare<T, std::less<T>>>
-struct xhash_set
+struct xunordered_set
 {
-	typedef std::hash_set<T, C, STLAllocator<T> > type;
+	typedef std::unordered_set<T, C, STLAllocator<T> > type;
 };
 
-template <class T, class C = std::less<std::vector<T>::value_type>>
+template <class T, class C = std::less<std::vector<T>>>
 struct xpriority_queue
 {
 	//TODO: STL 할당자 사용하는 priority_queue을  type으로 선언

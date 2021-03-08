@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Exception.h"
+#include "MemoryPool.h"
 #include "Server.h"
 #include "ClientSession.h"
 #include "IocpManager.h"
@@ -10,6 +11,7 @@ __declspec(thread) int LThreadType = -1;
 int _tmain(int argc, _TCHAR *argv[])
 {
 	LThreadType = THREAD_MAIN;
+	GMemoryPool = new MemoryPool;
 	GSessionManager = new SessionManager;
 	GIocpManager = new IocpManager;
 	if (false == GIocpManager->Initialize()) return -1;

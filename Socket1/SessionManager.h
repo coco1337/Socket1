@@ -1,5 +1,5 @@
 #pragma once
-#include <List>
+#include "XTL.h"
 #include "FastSpinlock.h"
 
 class ClientSession;
@@ -16,7 +16,7 @@ public:
 	void ReturnClientSession(ClientSession* client);
 
 private:
-	typedef std::list<ClientSession*> ClientList;
+	typedef xlist<ClientSession*>::type ClientList;
 	ClientList mFreeSessionList;
 
 	FastSpinlock mLock;

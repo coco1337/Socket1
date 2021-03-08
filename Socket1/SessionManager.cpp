@@ -2,6 +2,7 @@
 #include "Server.h"
 #include "ClientSession.h"
 #include "FastSpinlock.h"
+#include "MemoryPool.h"
 #include "SessionManager.h"
 
 #include "Exception.h"
@@ -10,7 +11,7 @@ SessionManager* GSessionManager = nullptr;
 
 SessionManager::~SessionManager()
 {
-	for (auto it : mFreeSessionList) delete it;
+	for (auto it : mFreeSessionList) xdelete(it);
 }
 
 void SessionManager::PrepareSessions()
@@ -19,7 +20,7 @@ void SessionManager::PrepareSessions()
 	
 	for (int i = 0; i < MAX_CONNECTION; ++i)
 	{
-		ClientSession* client = new ClientSession();
+		ClientSession* client = xnew<ClientSession>();
 		mFreeSessionList.push_back(client);
 	}
 }

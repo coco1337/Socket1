@@ -1,4 +1,6 @@
 #pragma once
+#include "MemoryPool.h"
+#include "ObjectPool.h"
 #include "CircularBuffer.h"
 #include "FastSpinlock.h"
 
@@ -36,24 +38,22 @@ struct OverlappedIOContext
 	WSABUF mWsaBuf;
 };
 
-struct OverlappedSendContext : public OverlappedIOContext
+struct OverlappedSendContext : public OverlappedIOContext, public ObjectPool<OverlappedSendContext>
 {
 	OverlappedSendContext(ClientSession* owner) : OverlappedIOContext(owner, IO_SEND) {}
 };
 
-struct OverlappedRecvContext : public OverlappedIOContext
+struct OverlappedRecvContext : public OverlappedIOContext, public ObjectPool<OverlappedRecvContext>
 {
 	OverlappedRecvContext(ClientSession* owner) : OverlappedIOContext(owner, IO_RECV) {}
 };
 
-struct OverlappedPreRecvContext : public OverlappedIOContext
+struct OverlappedPreRecvContext : public OverlappedIOContext, public ObjectPool<OverlappedPreRecvContext>
 {
-	OverlappedPreRecvContext(ClientSession* owner) : OverlappedIOContext(owner, IO_RECV_ZERO)
-	{
-	}
+	OverlappedPreRecvContext(ClientSession* owner) : OverlappedIOContext(owner, IO_RECV_ZERO) {}
 };
 
-struct OverlappedDisconnectContext : public OverlappedIOContext
+struct OverlappedDisconnectContext : public OverlappedIOContext, public ObjectPool<OverlappedIOContext>
 {
 	OverlappedDisconnectContext(ClientSession* owner, DisconnectReason dr)
 		: OverlappedIOContext(owner, IO_DISCONNECT), mDisconnectReason(dr) {}
@@ -68,7 +68,7 @@ struct OverlappedAcceptContext : public OverlappedIOContext
 
 void DeleteIoContext(OverlappedIOContext* context);
 
-class ClientSession
+class ClientSession : public PooledAllocatable
 {
 public:
 	ClientSession();
@@ -96,7 +96,7 @@ public:
 
 	void SetSocket(SOCKET sock) { mSocket = sock; }
 	SOCKET GetSocket() const { return mSocket; }
-	
+
 private:
 	SOCKET mSocket;
 	SOCKADDR_IN mClientAddr;

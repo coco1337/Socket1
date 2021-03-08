@@ -129,7 +129,7 @@ bool IocpManager::StartAccept()
 
 	while (GSessionManager->AcceptSessions())
 	{
-		Sleep(GQCS_TIMEOUT);
+		Sleep(100);
 	}
 }
 
