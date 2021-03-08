@@ -13,6 +13,7 @@
 #include <timeapi.h>
 #include <Windows.h>
 #include <MSWSock.h>
+#include <functional>
 
 #define BUF_SIZE 65536
 #define SERVER_ADDR "127.0.0.1"

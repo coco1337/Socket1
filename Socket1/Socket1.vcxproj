@@ -143,12 +143,18 @@
     <ClInclude Include="ClientSession.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="FastSpinlock.h" />
+    <ClInclude Include="GrandCentralExecuter.h" />
     <ClInclude Include="IocpManager.h" />
+    <ClInclude Include="LockOrderChecker.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="SessionManager.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SyncExecutable.h" />
+    <ClInclude Include="ThreadLocal.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="TypeTraits.h" />
     <ClInclude Include="XTL.h" />
   </ItemGroup>
   <ItemGroup>
@@ -157,9 +163,12 @@
     <ClCompile Include="Exception.cpp" />
     <ClCompile Include="FastSpinlock.cpp" />
     <ClCompile Include="IocpManager.cpp" />
+    <ClCompile Include="LockOrderChecker.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="SessionManager.cpp" />
+    <ClCompile Include="ThreadLocal.cpp" />
+    <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

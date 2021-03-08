@@ -41,7 +41,7 @@ MemoryPool::MemoryPool()
 
 	int recent = 0;
 
-	for (int i = 0; i < 1024; i += 32)
+	for (int i = 32; i < 1024; i += 32)
 	{
 		SmallSizeMemoryPool* pool = new SmallSizeMemoryPool(i);
 		for (int j = recent + 1; j <= i; ++j)
